@@ -60,3 +60,11 @@ export type EventType =
 	| 'workflow_step_deleted'
 	| 'workflow_step_execute'
 	| 'workflow_unpublished'
+
+export type MessageEventType = {
+	type: 'message'
+	channel: string
+	user: string
+	text: string
+	ts: string
+}

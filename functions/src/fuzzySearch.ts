@@ -77,20 +77,16 @@ const leven_arr_to_dict = (
 	return sorted_matches.map(([k, v]) => k)
 }
 
-const response = (matches: string[] | [string, number][]): string => {
-	let response = ''
-	for (let word in matches) {
-		if (word.toLowerCase() == 'benjamin') response = 'Hello Benjamin'
-		else if (word.toLowerCase() == 'amy') response = 'Hello Amy'
-		else if (word.toLowerCase() == 'happy') response = 'I am glad'
-	}
-	return response
-}
-
-const input = 'Hello I am benjamin and I am very with Amy'
 const strings = ['Befjbnin', 'Google', 'Benjamin', 'Amy', 'Testing', 'happy']
 
-const input_words = input.split(/\s/).reduce((arr: string[], word) => {
-	if (!sw.includes(word.toLowerCase())) arr.push(word)
-	return arr
-}, [])
+export const fuzzySearch = (
+	input: string,
+	withScores: boolean = false
+): string[] | [string, number][] => {
+	const input_words = input.split(/\s/).reduce((arr: string[], word) => {
+		if (!sw.includes(word.toLowerCase())) arr.push(word)
+		return arr
+	}, [])
+
+	return leven_arr_to_dict(input_words, strings, withScores)
+}

@@ -9,8 +9,9 @@ const bot = new WebClient(functions.config().slack.token)
 import { PubSub } from '@google-cloud/pubsub'
 const pubSubClient = new PubSub()
 
-import type { EventType } from '../types/events'
-import type { InteractionPayload } from '../types/interactions'
+import type { EventType, MessageEventType } from '../types/events'
+import { fuzzySearch } from './fuzzySearch'
+import { response } from './responses'
 
 //Challenge
 // Request from Slack
@@ -20,65 +21,35 @@ import type { InteractionPayload } from '../types/interactions'
 // res.send({ challenge })
 // console.log(req.body)
 
-export const slashCommand = functions.https.onRequest(async (req, res) => {
+export const events = functions.https.onRequest(async (req, res) => {
 	verifyWebhook(req)
 
-	const data = JSON.stringify(req.body)
-	const dataBuffer = Buffer.from(data)
-
-	await pubSubClient
-		.topic('slash-command-received')
-		.publishMessage({ data: dataBuffer })
-
-	res.status(200).send()
-})
-
-export const sendModal = functions.pubsub
-	.topic('slash-command-received')
-	.onPublish(async (message) => {
-		const msg = message.json
-
-		try {
-			await bot.views.open({
-				token: bot.token,
-				trigger_id: msg.trigger_id,
-				view: {
-					title: { type: 'plain_text', text: 'modal' },
-					type: 'modal',
-					blocks: [],
-				},
-			})
-		} catch (error) {
-			console.error(error)
-		}
-	})
-
-export const interaction = functions.https.onRequest(async (req, res) => {
-	const payload: InteractionPayload = JSON.parse(req.body.payload)
-
-	const data = JSON.stringify(payload)
-	const dataBuffer = Buffer.from(data)
-
-	if (payload.view.callback_id) {
-		await pubSubClient
-			.topic(payload.view.callback_id)
-			.publishMessage({ data: dataBuffer })
-	}
-	res.status(200).send()
-})
-
-export const events = functions.https.onRequest(async (req, res) => {
 	const eventType: EventType = req.body.type
 
 	const data = JSON.stringify(req.body)
 	const dataBuffer = Buffer.from(data)
 
 	await pubSubClient
-		.topic(`event_${eventType}`)
+		.topic(`event-${eventType}`)
 		.publishMessage({ data: dataBuffer })
 
 	res.status(200).send()
 })
+
+export const messageResponse = functions.pubsub
+	.topic('event-message')
+	.onPublish(async (message) => {
+		const payload: MessageEventType = message.json
+
+		const matches = fuzzySearch(payload.text)
+		const responseText = response(matches)
+
+		await bot.chat.postMessage({
+			token: bot.token,
+			channel: payload.user,
+			text: responseText,
+		})
+	})
 
 const verifyWebhook = (req: functions.https.Request) => {
 	const signature = {
