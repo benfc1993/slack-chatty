@@ -9,9 +9,9 @@ const bot = new WebClient(functions.config().slack.token)
 import { PubSub } from '@google-cloud/pubsub'
 const pubSubClient = new PubSub()
 
-import type { EventType, MessageEventType } from '../types/events'
-import { fuzzySearch } from './fuzzySearch'
-import { response } from './responses'
+import type { EventType, MessageEventType } from './types/events'
+import { fuzzySearch } from './utils/fuzzySearch'
+import { response } from './utils/responses'
 
 //Challenge
 // Request from Slack
