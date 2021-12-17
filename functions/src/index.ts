@@ -23,15 +23,16 @@ import { response } from './utils/responses'
 
 export const events = functions.https.onRequest(async (req, res) => {
 	verifyWebhook(req)
+	if (req.body.event.user !== 'U02R21EA62H') {
+		const eventType: EventType = req.body.event.type
 
-	const eventType: EventType = req.body.type
+		const data = JSON.stringify(req.body.event)
+		const dataBuffer = Buffer.from(data)
 
-	const data = JSON.stringify(req.body)
-	const dataBuffer = Buffer.from(data)
-
-	await pubSubClient
-		.topic(`event-${eventType}`)
-		.publishMessage({ data: dataBuffer })
+		await pubSubClient
+			.topic(`event-${eventType}`)
+			.publishMessage({ data: dataBuffer })
+	}
 
 	res.status(200).send()
 })
@@ -40,15 +41,18 @@ export const messageResponse = functions.pubsub
 	.topic('event-message')
 	.onPublish(async (message) => {
 		const payload: MessageEventType = message.json
-
 		const matches = fuzzySearch(payload.text)
 		const responseText = response(matches)
 
-		await bot.chat.postMessage({
-			token: bot.token,
-			channel: payload.user,
-			text: responseText,
-		})
+		try {
+			await bot.chat.postMessage({
+				token: bot.token,
+				channel: payload.user,
+				text: responseText,
+			})
+		} catch (err) {
+			console.error(err)
+		}
 	})
 
 const verifyWebhook = (req: functions.https.Request) => {

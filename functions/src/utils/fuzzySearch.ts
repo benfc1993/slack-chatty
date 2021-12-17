@@ -1,3 +1,4 @@
+import { responses } from './responses'
 import { sw } from './stop-words'
 
 const leven = (s: string, t: string) => {
@@ -62,12 +63,12 @@ const leven_arr_to_dict = (
 		for (let j = 0; j < arr.length; j++) {
 			let ratio = leven(input[i], arr[j])
 			if (
-				Object.keys(matches).includes(input[i]) &&
-				ratio < matches[input[i]]
+				Object.keys(matches).includes(arr[j]) &&
+				ratio < matches[arr[j]]
 			) {
 				continue
 			}
-			matches[input[i]] = ratio
+			matches[arr[j]] = ratio
 		}
 	}
 	const sorted_matches = Object.entries(matches).sort(
@@ -77,7 +78,7 @@ const leven_arr_to_dict = (
 	return sorted_matches.map(([k, v]) => k)
 }
 
-const strings = ['Befjbnin', 'Google', 'Benjamin', 'Amy', 'Testing', 'happy']
+const strings = Object.keys(responses)
 
 export const fuzzySearch = (
 	input: string,
@@ -88,5 +89,5 @@ export const fuzzySearch = (
 		return arr
 	}, [])
 
-	return leven_arr_to_dict(input_words, strings, withScores)
+	return leven_arr_to_dict(input_words, strings)
 }

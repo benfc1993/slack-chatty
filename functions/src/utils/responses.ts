@@ -2,17 +2,25 @@ type ResponsesType = {
 	[match: string]: string
 }
 
-const responses: ResponsesType = {
+export const responses: ResponsesType = {
 	benjamin: 'Hello Benjamin',
 	amy: 'Hello Amy',
 	happy: 'I am glad',
 }
 
 export const response = (matches: string[] | [string, number][]): string => {
-	let response = ''
-	for (let word in matches) {
-		if (responses[word.toLowerCase()])
-			response = responses[word.toLowerCase()]
+	let response = 'Hello'
+
+	if (typeof matches[0] === 'string') {
+		for (let word of matches) {
+			if (Object.keys(responses).includes(String(word).toLowerCase()))
+				response = responses[String(word).toLowerCase()]
+		}
+	} else {
+		for (let match of matches) {
+			if (Object.keys(responses).includes(match[0].toLowerCase()))
+				response = responses[match[0].toLowerCase()]
+		}
 	}
 	return response
 }
